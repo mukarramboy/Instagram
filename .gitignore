@@ -1,0 +1,103 @@
+# .gitignore for Django + Django REST Framework projects
+
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage
+coverage.xml
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+# compiled migration files
+*/migrations/__pycache__/
+*/migrations/*.py[cod]
+
+# If you build static assets into a folder named "static" during deploy,
+# avoid ignoring it here (only ignore staticfiles/ which is collectstatic output)
+
+# Environment variables
+.env
+.env.*    # e.g. .env.dev, .env.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Editor temporary files
+*~
+*.swp
+*.swo
+.session
+.project
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+/build
+public/build
+
+# Docker
+docker-compose.override.yml
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Misc caches
+.mypy_cache/
+.pyre/
+.ruff_cache/
+.cache/
+pip-wheel-metadata/

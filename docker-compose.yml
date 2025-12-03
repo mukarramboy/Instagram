@@ -1,0 +1,57 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: .
+    container_name: django_web
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+
+  celery:
+    build: .
+    container_name: celery_worker
+    command: celery -A config worker --loglevel=INFO
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+    networks:
+      - internal
+
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - internal
+
+  db:
+    image: postgres:16
+    container_name: postgres
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  postgres_data:

@@ -1,0 +1,11 @@
+django
+django-rest-framework
+djangorestframework-simplejwt
+psycopg2-binary
+redis
+celery
+gunicorn
+python-dotenv
+pytest
+pytest-django
+pytest-cov

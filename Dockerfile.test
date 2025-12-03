@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt update && apt install -y \
+    gcc \
+    libpq-dev \
+    && apt clean
+
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app/
+
+# pytest будет работать внутри контейнера
+CMD ["pytest", "-v", "--maxfail=1", "--disable-warnings"]

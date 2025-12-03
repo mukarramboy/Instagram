@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:1.25
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
+    networks:
+      - public
+      - internal
+
+  web:
+    build:
+      context: .
+    container_name: django_web
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4
+    env_file:
+      - .env.prod
+    volumes:
+      - static_volume:/app/staticfiles
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+    restart: unless-stopped
+
+  celery:
+    build: .
+    container_name: celery_worker
+    command: celery -A config worker --loglevel=INFO
+    env_file:
+      - .env.prod
+    depends_on:
+      - web
+      - redis
+    networks:
+      - internal
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    container_name: celery_beat
+    command: celery -A config beat --loglevel=INFO
+    env_file:
+      - .env.prod
+    depends_on:
+      - web
+      - redis
+    networks:
+      - internal
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis
+    networks:
+      - internal
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: postgres
+    env_file:
+      - .env.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    restart: unless-stopped
+
+networks:
+  public:
+  internal:
+
+volumes:
+  postgres_data:
+  static_volume:

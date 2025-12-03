@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.egg-info/
+*.egg
+venv/
+.env
+.env.*  # если есть локальные env файлы
+
+# Logs
+*.log
+logs/
+
+# Docker
+Dockerfile.test
+docker-compose.test.yml
+*.md
+
+# Pytest / Coverage
+htmlcov/
+.coverage
+.pytest_cache/
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.iml

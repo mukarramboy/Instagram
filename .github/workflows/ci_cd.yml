@@ -1,0 +1,101 @@
+name: CI/CD Pipeline (tests + deploy + telegram notifications)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  PROJECT_DIR: /var/www/myproject  # путь на сервер, где хранить проект
+
+jobs:
+  tests:
+    name: Run pytest in Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+      - name: Tear down test containers
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
+      # отправляем уведомление в телеграм при падении тестов
+      - name: Notify Telegram (tests failed)
+        if: failure()
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="❌ CI: pytest failed on repo $GITHUB_REPOSITORY (branch: $GITHUB_REF)"
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            -d text="$MESSAGE"
+
+#   deploy:
+#     name: Deploy to server
+#     needs: tests
+#     runs-on: ubuntu-latest
+#     if: success()  # только если тесты прошли
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
+
+#       - name: Copy project to server
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: ${{ secrets.SERVER_HOST }}
+#           username: ${{ secrets.SERVER_USER }}
+#           key: ${{ secrets.SERVER_SSH_KEY }}
+#           source: "."
+#           target: "${{ env.PROJECT_DIR }}"
+
+#       - name: SSH: Deploy on server (docker compose up)
+#         uses: appleboy/ssh-action@v1.1.0
+#         with:
+#           host: ${{ secrets.SERVER_HOST }}
+#           username: ${{ secrets.SERVER_USER }}
+#           key: ${{ secrets.SERVER_SSH_KEY }}
+#           script: |
+#             set -e
+#             cd $PROJECT_DIR
+#             # optional: backup, pull git, etc.
+#             docker compose -f docker-compose.prod.yml down || true
+#             docker compose -f docker-compose.prod.yml up -d --build
+#             # выполняем миграции и collectstatic внутри контейнера
+#             docker exec -u root django_web bash -lc "python manage.py migrate --noinput"
+#             docker exec -u root django_web bash -lc "python manage.py collectstatic --noinput"
+#             # перезапускаем celery (опционально)
+#             docker compose -f docker-compose.prod.yml restart celery || true
+
+#       - name: Notify Telegram (deploy success)
+#         env:
+#           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+#           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+#         run: |
+#           MESSAGE="✅ Deploy successful for $GITHUB_REPOSITORY to ${{ secrets.SERVER_HOST }} (branch: $GITHUB_REF)"
+#           curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+#             -d chat_id="${CHAT_ID}" \
+#             -d text="$MESSAGE"
+
+#   notify_deploy_failure:
+#     name: Notify Telegram (deploy failed)
+#     runs-on: ubuntu-latest
+#     needs: deploy
+#     if: failure()
+#     steps:
+#       - name: Notify Telegram (deploy failed)
+#         env:
+#           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+#           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+#         run: |
+#           MESSAGE="❌ Deploy failed for $GITHUB_REPOSITORY on host ${{ secrets.SERVER_HOST }} (branch: $GITHUB_REF)"
+#           curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+#             -d chat_id="${CHAT_ID}" \
+#             -d text="$MESSAGE"
