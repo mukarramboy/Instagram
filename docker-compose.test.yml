@@ -10,6 +10,7 @@ services:
       - .env.test
     depends_on:
       - test_db
+      - redis
     networks:
       - testnet
     volumes:
@@ -20,10 +21,18 @@ services:
     container_name: test_postgres
     env_file:
       - .env.test
-      
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
     networks:
       - testnet
 
+  redis:
+    image: redis:7
+    networks:
+      - testnet
 
 networks:
   testnet:
+
+volumes:
+  test_postgres_data:
